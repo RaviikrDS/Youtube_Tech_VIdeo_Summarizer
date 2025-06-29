@@ -16,6 +16,7 @@ from docx.enum.section import WD_ORIENT
 import html
 
 
+
 # Load env variables and configure Gemini
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -33,11 +34,15 @@ Your task is to analyze the provided transcript and generate a developer-focused
 5. Explain **how and why** certain techniques, code, or tools were used if such reasoning exists in the transcript.
 6. Preserve the **logical or chronological flow** of the video so it reads like a structured lesson.
 7. Use **markdown formatting** for readability: bold, lists, headings, and sections.
+8. Based on the transcript, generate only relevant visual diagrams like - Architecture, Flow Chart, Process, or Graph. 
+    using Mermaid only if relevant to show. 
+    e.g. graph TD A ---> B
 
 🛑 Do not:
 - Add your own interpretation or assume anything not clearly mentioned in the transcript.
 - Skip any detail, even if repetitive — be complete.
-- break sentence unnecessary. e.g. This code is in requirements.txt: into this code is \n requirements.txt \n :
+- break sentence unnecessary. e.g. This code is in requirements.txt: into this code is \n requirements.txt \n:
+- Do not add unnecessary diagram.
 
 🛑 Do:
 - remove ** from word or sentence and make that word or sentence bold. e.g ** Just example** to Just example in bold letters.
@@ -45,6 +50,9 @@ Your task is to analyze the provided transcript and generate a developer-focused
 - Optimize the notes based on your understanding without missing any topic.
 - Make notes error free in terms of grammar and Punctuations.
 - If there is code in notes, at the end proivide full code as well.
+- Use `mermaid` syntax and wrap each diagram in triple backticks like:
+    ```mermaid
+    [diagram here]
 
 
 📘 Your summary must be formatted like clear developer technical documentation or notes. Use the following structure:
@@ -85,7 +93,7 @@ def get_video_id(url):
 def extract_transcript_details(youtube_video_url):
     try:
         video_id = get_video_id(youtube_video_url)
-        transcript_data = YouTubeTranscriptApi.get_transcript(video_id)
+        transcript_data = YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'hi'])
         transcript = " ".join([entry["text"] for entry in transcript_data])
         return transcript
     except Exception as e:
@@ -114,15 +122,31 @@ def markdown_to_html(md_text):
 
     # --- Convert headers ---
     md_text = re.sub(r"### (.*?)\n", r"<h2>\1</h2>\n", md_text)
-
-    # --- Convert fenced code blocks ```language\n...``` ---
+    # Declare this before defining replace_code_block
     code_blocks = []
     def replace_code_block(match):
-        lang = match.group(1)
-        code = html.escape(match.group(2).strip())
+        lang = match.group(1).strip().lower()
+        raw_code = match.group(2).strip()
+
+        if lang in ["mermaid", "graphviz", "dot"]:
+            # Do not escape diagram code – let JS render it
+            placeholder = f"[[DIAGRAM_BLOCK_{len(code_blocks)}]]"
+            diagram_html = f"""
+            <div class="mermaid">
+                <pre class="language-{lang}">
+    {raw_code}
+                </pre>
+            </div>
+            """
+            code_blocks.append(diagram_html)
+            return placeholder
+
+        # Default code block (Python, Bash, etc.)
+        escaped_code = html.escape(raw_code)
         placeholder = f"[[CODE_BLOCK_{len(code_blocks)}]]"
-        code_blocks.append(f'<pre><code class="language-{lang}">{code}</code></pre>')
+        code_blocks.append(f'<pre><code class="language-{lang}">{escaped_code}</code></pre>')
         return placeholder
+
 
     md_text = re.sub(r"```(\w*)\n(.*?)```", replace_code_block, md_text, flags=re.DOTALL)
 
@@ -235,7 +259,22 @@ def create_html_file(content):
                 margin: auto;
                 padding: 20px;
             }}
+            .diagram {{
+                margin: 20px 0;
+                padding: 10px;
+                border-left: 4px solid #007acc;
+                background: #f9f9f9;
+                font-family: 'Courier New', monospace;
+                font-size: 14px;
+            }}
         </style>
+
+        <!-- Mermaid.js for rendering flowcharts -->
+        <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+            mermaid.initialize({{ startOnLoad: true }});
+        </script>
+
     </head>
     <body>
         <div class="container">
