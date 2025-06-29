@@ -81,16 +81,30 @@ def get_video_id(url):
         return None
     return None
 
-# Extract transcript text
+from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
+
+# Extract transcript text with fallback
 def extract_transcript_details(youtube_video_url):
     try:
         video_id = get_video_id(youtube_video_url)
-        transcript_data = YouTubeTranscriptApi.get_transcript(video_id)
+        try:
+            # First try English
+            transcript_data = YouTubeTranscriptApi.get_transcript(video_id, languages=["en","hi"])
+        except NoTranscriptFound:
+            st.warning("English transcript not found. Trying Hindi...")
+            # Try Hindi if English not found
+            transcript_data = YouTubeTranscriptApi.get_transcript(video_id, languages=["hi"])
+        
         transcript = " ".join([entry["text"] for entry in transcript_data])
         return transcript
+
+    except TranscriptsDisabled:
+        st.error("Transcripts are disabled for this video.")
+        return None
     except Exception as e:
         st.error(f"Error fetching transcript: {e}")
         return None
+
 
 # Call Gemini
 def generate_gemini_content(transcript_text, prompt):
