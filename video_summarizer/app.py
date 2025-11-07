@@ -3,82 +3,76 @@ from dotenv import load_dotenv
 import os
 import google.generativeai as genai
 from urllib.parse import urlparse, parse_qs
-from youtube_transcript_api import YouTubeTranscriptApi
-from docx import Document
-from docx.shared import Pt
-from docx.oxml.ns import qn
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
 import tempfile
-import uuid
 import re
-from docx.shared import Inches, Pt
-from docx.enum.section import WD_ORIENT
 import html
 
-
-
-# Load env variables and configure Gemini
+# =========================
+# 🌟 INITIAL SETUP
+# =========================
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-prompt = """
-You are an expert technical summarizer specializing in educational programming, AI/ML and software development videos.
-Your task is to analyze the provided transcript and generate a developer-focused summary that captures all the key concepts, implementations, and code examples explained in the video.
+LANGUAGES = {
+    "English": "en",
+    "Hindi": "hi",
+    "Spanish": "es",
+    "French": "fr",
+    "German": "de",
+    "Chinese": "zh",
+    "Japanese": "ja",
+    "Russian": "ru",
+    "Portuguese": "pt",
+    "Arabic": "ar"
+}
 
-⚙️ Output Requirements:
+st.set_page_config(
+    page_title="TubeNotes AI",
+    layout="wide",
+    page_icon="📒",
+    initial_sidebar_state="expanded"
+)
 
-1. Cover **everything explained or demonstrated** in the video — from theoretical concepts to practical steps.
-2. Provide **code snippets exactly as shown or implied**, formatted in correct triple backticks with appropriate language (e.g., ```python, ```bash).
-3. Include **step-by-step technical breakdowns** for implementations, setups, or workflows.
-4. Mention all **libraries, frameworks, APIs, tools, commands, environments**, or configurations used or referred to.
-5. Explain **how and why** certain techniques, code, or tools were used if such reasoning exists in the transcript.
-6. Preserve the **logical or chronological flow** of the video so it reads like a structured lesson.
-7. Use **markdown formatting** for readability: bold, lists, headings, and sections.
-8. Based on the transcript, generate only relevant visual diagrams like - Architecture, Flow Chart, Process, or Graph. 
-    using Mermaid only if relevant to show. 
-    e.g. graph TD A ---> B
+# =========================
+# 🎨 SIDEBAR UI
+# =========================
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/5968/5968705.png", width=80)
+    st.markdown("<h2 style='color:#8B8B00;'>Video Summarizer</h2>", unsafe_allow_html=True)
+    st.markdown(
+        "<p style='font-size:16px;color:#444;'>Summarize YouTube programming, AI/ML, and software development videos into developer-friendly notes in your preferred language.</p>",
+        unsafe_allow_html=True
+    )
+    st.markdown("---")
+    st.markdown("**Select Output Language:**")
+    selected_language = st.selectbox(
+        "Language",
+        options=list(LANGUAGES.keys()),
+        index=0,
+        key="language_selector"
+    )
+    st.markdown("---")
+    st.markdown(
+        "<small style='color:#888;'>Powered by Google Gemini | Developed by Your Team</small>",
+        unsafe_allow_html=True
+    )
 
-🛑 Do not:
-- Add your own interpretation or assume anything not clearly mentioned in the transcript.
-- Skip any detail, even if repetitive — be complete.
-- break sentence unnecessary. e.g. This code is in requirements.txt: into this code is \n requirements.txt \n:
-- Do not add unnecessary diagram.
+# =========================
+# 🎓 MAIN PAGE HEADER
+# =========================
+st.markdown(
+    "<h1 style='color:#003366;text-align:center;'>🎓 YouTube Video Summarizer</h1>",
+    unsafe_allow_html=True
+)
 
-🛑 Do:
-- remove ** from word or sentence and make that word or sentence bold. e.g ** Just example** to Just example in bold letters.
-- Use bullet points olny where it is required.
-- Optimize the notes based on your understanding without missing any topic.
-- Make notes error free in terms of grammar and Punctuations.
-- If there is code in notes, at the end proivide full code as well.
-- Use `mermaid` syntax and wrap each diagram in triple backticks like:
-    ```mermaid
-    [diagram here]
+# =========================
+# 🔗 YOUTUBE LINK INPUT
+# =========================
+youtube_link = st.text_input("🔗 Enter YouTube Video Link:", key="youtube_link_input")
 
-
-📘 Your summary must be formatted like clear developer technical documentation or notes. Use the following structure:
-
----
-
-### 🔍 Video Summary
-Brief summary in 3-5 lines covering the purpose, goals, and output of the video.
-
-### 🧠 Key Concepts
-- Bullet points listing all topics, principles, definitions, or ideas explained.
-
-### 💡 Step-by-Step Instructions
-- Numbered list of steps followed in the video (e.g., setup, coding, testing, deployment).
-
-### 🧾 Code Snippets
-Include all major code shown or described, wrapped in correct ``` code blocks with the language name:
-```python
-# sample code here
-
-### Conclusion
-- Provide very optimize conclusion.
-"""
-
-# Extract YouTube video ID
 def get_video_id(url):
+    """Extract YouTube video ID from link."""
     try:
         if "youtu.be" in url:
             return url.split("/")[-1]
@@ -89,16 +83,20 @@ def get_video_id(url):
         return None
     return None
 
-from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
+if youtube_link:
+    video_id = get_video_id(youtube_link)
+    if video_id:
+        st.image(f"http://img.youtube.com/vi/{video_id}/0.jpg", use_container_width=True)
 
-# Extract transcript text with fallback
+# =========================
+# 🎬 FETCH TRANSCRIPT
+# =========================
 def extract_transcript_details(youtube_video_url):
     try:
         video_id = get_video_id(youtube_video_url)
         transcript_data = YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'hi'])
         transcript = " ".join([entry["text"] for entry in transcript_data])
         return transcript
-
     except TranscriptsDisabled:
         st.error("Transcripts are disabled for this video.")
         return None
@@ -106,115 +104,82 @@ def extract_transcript_details(youtube_video_url):
         st.error(f"Error fetching transcript: {e}")
         return None
 
-
-# Call Gemini
-def generate_gemini_content(transcript_text, prompt):
+# =========================
+# 🌍 TRANSLATION VIA GEMINI
+# =========================
+def translate_text(text, target_lang_code):
+    if target_lang_code == "en":
+        return text
     try:
         model = genai.GenerativeModel("models/gemini-2.5-flash")
-        response = model.generate_content([prompt + transcript_text])
+        translate_prompt = f"Translate the following technical summary to {target_lang_code} language. Only output the translated text, keeping markdown/code formatting:\n\n{text}"
+        response = model.generate_content([translate_prompt])
         return response.text
+    except Exception as e:
+        st.error(f"Error translating summary: {e}")
+        return text
+
+# =========================
+# 🤖 GEMINI CONTENT GENERATION
+# =========================
+def generate_gemini_content(transcript_text, prompt, target_lang_code, progress):
+    try:
+        progress.progress(40)
+        model = genai.GenerativeModel("models/gemini-2.5-flash")
+
+        # Generate Summary
+        response = model.generate_content([prompt + transcript_text])
+        summary = response.text
+
+        progress.progress(70)
+        # Translate (if needed)
+        summary = translate_text(summary, target_lang_code)
+
+        progress.progress(100)
+        return summary
     except Exception as e:
         st.error(f"Error generating summary: {e}")
         return None
 
-
+# =========================
+# 🧾 MARKDOWN TO HTML
+# =========================
 def markdown_to_html(md_text):
     md_text = md_text.strip()
-
-    # --- Convert **bold** syntax into HTML bold ---
     md_text = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", md_text)
-
-    # --- Remove empty markdown headers like #, ##, ### ---
     md_text = re.sub(r"^#{1,3}\s*$", "", md_text, flags=re.MULTILINE)
-
-    # --- Convert headers ---
     md_text = re.sub(r"### (.*?)\n", r"<h2>\1</h2>\n", md_text)
-    # Declare this before defining replace_code_block
+
     code_blocks = []
+
     def replace_code_block(match):
         lang = match.group(1).strip().lower()
         raw_code = match.group(2).strip()
-
-        if lang in ["mermaid", "graphviz", "dot"]:
-            # Do not escape diagram code – let JS render it
-            placeholder = f"[[DIAGRAM_BLOCK_{len(code_blocks)}]]"
-            diagram_html = f"""
-            <div class="mermaid">
-                <pre class="language-{lang}">
-    {raw_code}
-                </pre>
-            </div>
-            """
-            code_blocks.append(diagram_html)
-            return placeholder
-
-        # Default code block (Python, Bash, etc.)
         escaped_code = html.escape(raw_code)
         placeholder = f"[[CODE_BLOCK_{len(code_blocks)}]]"
         code_blocks.append(f'<pre><code class="language-{lang}">{escaped_code}</code></pre>')
         return placeholder
 
-
     md_text = re.sub(r"```(\w*)\n(.*?)```", replace_code_block, md_text, flags=re.DOTALL)
 
-    # --- Line-by-line processing for bullets and numbered list ---
     lines = md_text.splitlines()
     processed_lines = []
-    in_numbered_list = False
-    in_bullets = False
-
     for line in lines:
         line = line.strip()
+        if line.startswith(("-", "*")):
+            processed_lines.append(f"<li>{line.lstrip('-*').strip()}</li>")
+        else:
+            processed_lines.append(f"<p>{line}</p>")
 
-        if not line:
-            if in_bullets:
-                processed_lines.append("</ul>")
-                in_bullets = False
-            if in_numbered_list:
-                processed_lines.append("</ol>")
-                in_numbered_list = False
-            continue
-
-        # Detect numbered list (e.g., 1. Text)
-        if re.match(r"^\d+\.\s", line):
-            if not in_numbered_list:
-                processed_lines.append("<ol>")
-                in_numbered_list = True
-            line = re.sub(r"^\d+\.\s*", "", line)
-            processed_lines.append(f"<li>{line}</li>")
-            continue
-
-        # Detect bullets (* or -), skip if contains bold
-        if line.startswith(("-", "*")) and "<strong>" not in line:
-            if not in_bullets:
-                processed_lines.append("<ul>")
-                in_bullets = True
-            line = line.lstrip("-*").strip()
-            processed_lines.append(f"<li>{line}</li>")
-            continue
-
-        if in_bullets:
-            processed_lines.append("</ul>")
-            in_bullets = False
-        if in_numbered_list:
-            processed_lines.append("</ol>")
-            in_numbered_list = False
-
-        processed_lines.append(f"<p>{line}</p>")
-
-    if in_bullets:
-        processed_lines.append("</ul>")
-    if in_numbered_list:
-        processed_lines.append("</ol>")
-
-    # --- Reinsert code blocks ---
     html_output = "\n".join(processed_lines)
     for i, block in enumerate(code_blocks):
         html_output = html_output.replace(f"[[CODE_BLOCK_{i}]]", block)
 
     return html_output
 
-
+# =========================
+# 💾 CREATE HTML FILE
+# =========================
 def create_html_file(content):
     html_template = f"""
     <!DOCTYPE html>
@@ -222,72 +187,33 @@ def create_html_file(content):
     <head>
         <meta charset="utf-8">
         <title>AI-Generated Video Summary</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
             body {{
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-family: 'Segoe UI', sans-serif;
                 margin: 40px;
-                background-color: #fdfdfd;
                 color: #333;
-                line-height: 1.6;
+                background-color: #fafafa;
             }}
             h1 {{
                 text-align: center;
-                color: #1a1a1a;
-                margin-bottom: 40px;
+                color: #003366;
             }}
             h2 {{
-                color: #003366;
-                margin-top: 30px;
-                border-bottom: 2px solid #eee;
+                color: #004488;
+                border-bottom: 1px solid #ccc;
                 padding-bottom: 5px;
             }}
-            ul {{
-                margin-left: 30px;
-                margin-bottom: 20px;
-            }}
             pre {{
-                background-color: #f4f4f4;
-                padding: 15px;
+                background: #f4f4f4;
+                padding: 10px;
                 border-radius: 8px;
                 overflow-x: auto;
-                margin-bottom: 20px;
-                font-size: 0.95em;
-            }}
-            code {{
-                font-family: Consolas, Monaco, 'Courier New', monospace;
-                color: #2c3e50;
-            }}
-            p {{
-                margin-bottom: 10px;
-            }}
-            .container {{
-                max-width: 1000px;
-                margin: auto;
-                padding: 20px;
-            }}
-            .diagram {{
-                margin: 20px 0;
-                padding: 10px;
-                border-left: 4px solid #007acc;
-                background: #f9f9f9;
-                font-family: 'Courier New', monospace;
-                font-size: 14px;
             }}
         </style>
-
-        <!-- Mermaid.js for rendering flowcharts -->
-        <script type="module">
-            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-            mermaid.initialize({{ startOnLoad: true }});
-        </script>
-
     </head>
     <body>
-        <div class="container">
-            <h1>📘 AI-Generated Technical Summary</h1>
-            {markdown_to_html(content)}
-        </div>
+        <h1>📘 AI-Generated Technical Summary</h1>
+        {markdown_to_html(content)}
     </body>
     </html>
     """
@@ -297,32 +223,31 @@ def create_html_file(content):
         f.write(html_template)
     return file_path.name
 
+# =========================
+# 🚀 MAIN ACTION WITH SPINNER + PROGRESS
+# =========================
+prompt = "Summarize this transcript into concise, technical bullet points suitable for developer notes:\n\n"
 
-# Streamlit UI
-st.set_page_config(page_title="Video Summarizer", layout="wide")
-st.title("🎓 YouTube Technical Video Summarizer with Gemini AI")
+if st.button("📄 Generate Summary", use_container_width=True, key="generate_summary_button"):
+    with st.spinner("⏳ Generating your video summary... Please wait!"):
+        progress = st.progress(10)
+        transcript_text = extract_transcript_details(youtube_link)
+        if transcript_text:
+            progress.progress(30)
+            summary = generate_gemini_content(transcript_text, prompt, LANGUAGES[selected_language], progress)
+            if summary:
+                st.success("✅ Summary generation complete!")
+                st.markdown("<h2 style='color:#007acc;'>📘 AI-Generated Notes:</h2>", unsafe_allow_html=True)
+                st.markdown(summary, unsafe_allow_html=True)
 
-youtube_link = st.text_input("🔗 Enter YouTube Video Link:")
+                html_path = create_html_file(summary)
+                with open(html_path, "rb") as f:
+                    st.download_button(
+                        f"🖥️ Download Notes as HTML ({selected_language})",
+                        f,
+                        f"video_summary_{LANGUAGES[selected_language]}.html",
+                        mime="text/html",
+                        key="download_button"
+                    )
 
-if youtube_link:
-    video_id = get_video_id(youtube_link)
-    if video_id:
-        st.image(f"http://img.youtube.com/vi/{video_id}/0.jpg", use_container_width=True)
-
-if st.button("📄 Generate Summary"):
-    transcript_text = extract_transcript_details(youtube_link)
-
-    if transcript_text:
-        summary = generate_gemini_content(transcript_text, prompt)
-        if summary:
-            st.markdown("## 📘 AI-Generated Developer Notes:")
-            st.markdown(summary, unsafe_allow_html=True)
-
-            # 📥 HTML (code-highlighted)
-            html_path = create_html_file(summary)
-            with open(html_path, "rb") as f:
-                st.download_button("🖥️ Download as HTML (.html)", f, "video_summary.html", mime="text/html")
-
-            # 🚀 Optional: Upload to Google Drive (placeholder for future)
-            if st.checkbox("☁️ Upload to Google Drive (coming soon)", value=False, disabled=True):
-                st.info("Google Drive upload will be added in next version.")
+                st.info("☁️ Google Drive upload feature coming soon 🚀")
