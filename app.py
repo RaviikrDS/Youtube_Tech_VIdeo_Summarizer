@@ -8,6 +8,9 @@ import tempfile
 import re
 import html
 
+# Make sure Streamlit listens on the correct port when running on Render
+port = int(os.environ.get("PORT", 8501))
+
 # =========================
 # INITIAL SETUP
 # =========================
