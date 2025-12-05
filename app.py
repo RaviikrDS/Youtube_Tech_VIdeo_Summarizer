@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 import google.generativeai as genai
 from urllib.parse import urlparse, parse_qs
-from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
+from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled, _errors
 import tempfile
 import re
 import html
@@ -421,18 +421,27 @@ if youtube_link:
 # =========================
 # FETCH TRANSCRIPT
 # =========================
+
 def extract_transcript_details(youtube_video_url):
     try:
         video_id = get_video_id(youtube_video_url)
         transcript_data = YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'hi'])
         transcript = " ".join([entry["text"] for entry in transcript_data])
         return transcript
-    except TranscriptsDisabled:
-        st.error("Transcripts are disabled for this video.")
+    except (NoTranscriptFound, TranscriptsDisabled):
+        st.error("No transcript is available for this video (disabled or not provided).")
         return None
     except Exception as e:
-        st.error(f"Error fetching transcript: {e}")
+        # generic catch: IP blocked / RequestBlocked / others
+        st.error(
+            "We couldn't fetch the transcript. This often happens when YouTube blocks "
+            "requests from the server's IP (common on cloud hosting). "
+            "Please try another video or run the app locally."
+        )
+        # Optional: log the detailed error in console
+        st.write(e)
         return None
+
 
 # =========================
 # TRANSLATION VIA GEMINI
