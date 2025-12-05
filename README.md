@@ -9,7 +9,7 @@ TubeNotes AI is an intelligent tool that transforms YouTube video content into c
 ![User Interface](assets/UI.png)
 
 
-## 2. How TubeNotes AI Resolves the Problem
+## How TubeNotes AI Resolves the Problem
 
 TubeNotes AI automatically converts YouTube video content into concise, organized notes using advanced AI (Google Gemini). It fetches video transcripts, applies structured prompts, and generates high-quality notes in various formats and languages. This enables users to quickly review, revise, and retain key insights from any video.
 
@@ -17,7 +17,7 @@ TubeNotes AI automatically converts YouTube video content into concise, organize
 
 ![Notes Format](assets/Format.png)
 
-## 3. Advantages
+## Advantages
 
 - **Saves Time:** Instantly generates notes from any YouTube video.
 - **Multiple Formats:** Supports technical notes, interview Q&A, and custom prompts.
@@ -31,7 +31,7 @@ TubeNotes AI automatically converts YouTube video content into concise, organize
 ![Notes Generated](assets/Notes.png)
 
 
-## 4. Folder Structure
+## Folder Structure
 
 ```
 TubeNotes AI/
@@ -47,7 +47,7 @@ TubeNotes AI/
 └── (other files/folders as needed)
 ```
 
-## 5. How to Use
+## How to Use ?
 
 1. **Clone the repository:**
    ```
@@ -89,10 +89,10 @@ TubeNotes AI/
 
 ![Download Notes](assets/DownloadNotes.png)
 
-## 6. Conclusion
+## Conclusion
 
 TubeNotes AI streamlines the process of learning from YouTube videos by transforming them into actionable, structured notes. It empowers users to save time, improve retention, and prepare effectively for technical interviews, research, or general study.
 
-## 7. License
+## License
 
 This project is licensed under the [MIT License](LICENSE).
