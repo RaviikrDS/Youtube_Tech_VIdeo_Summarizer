@@ -1,18 +1,13 @@
 # TubeNotes AI
 
+## Overview
+
+TubeNotes AI is an intelligent tool that transforms YouTube video content into concise, actionable notes. Designed for technical, interview, and research topics, it leverages advanced AI (Google Gemini) to extract key insights, summaries, and Q&A from lengthy videos. Users can select their preferred language, customize note formats, and export notes as HTML for easy revision and sharing.
+
 ### User Interface
 
 ![User Interface](assets/UI.png)
 
-## Key Features
-
-- **Language Selection:** Export notes in your preferred language, including Spanish, Hindi, French, German, and more.
-- **Flexible Notes Format:** Choose from multiple predefined notes formats or use your own custom prompt for tailored note generation.
-- **HTML Export:** Download generated notes as an HTML file for easy offline access or sharing.
-
-## 1. Problem Statement
-
-Learning from YouTube videos is time-consuming and often inefficient, especially for technical, interview, or research topics. Viewers struggle to extract actionable notes, summaries, or Q&A from lengthy video content, making revision and knowledge retention difficult.
 
 ## 2. How TubeNotes AI Resolves the Problem
 
@@ -82,6 +77,13 @@ TubeNotes AI/
    - Choose your desired export language (e.g., Spanish, Hindi, French, German, etc.).
    - Click "Generate Notes" to view the results.
    - Download the generated notes as an HTML file for offline use or sharing.
+
+
+## Key Features
+
+- **Language Selection:** Export notes in your preferred language, including Spanish, Hindi, French, German, and more.
+- **Flexible Notes Format:** Choose from multiple predefined notes formats or use your own custom prompt for tailored note generation.
+- **HTML Export:** Download generated notes as an HTML file for easy offline access or sharing.
 
 ### 📝 Download Notes in HTML
 
