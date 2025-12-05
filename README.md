@@ -2,7 +2,7 @@
 
 ### User Interface
 
-![User Interface](assets/ui.PNG)
+![User Interface](assets/UI.png)
 
 ## Key Features
 
@@ -20,7 +20,7 @@ TubeNotes AI automatically converts YouTube video content into concise, organize
 
 ### Notes Format and Language selection
 
-![Notes Format and Language selection](assets/Format.PNG)
+![Notes Format](assets/Format.png)
 
 ## 3. Advantages
 
