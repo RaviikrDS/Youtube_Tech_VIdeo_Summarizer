@@ -1,120 +1,96 @@
-# 🎥 TubeNotes AI
+# TubeNotes AI
 
-The **TubeNotes AI** is a Streamlit-based application that intelligently summarizes educational and technical videos. It extracts key concepts, provides clean code snippets, and organizes insights into structured documentation — all using Google Gemini models.
+### User Interface
 
----
+![User Interface](assets/ui.PNG)
 
-## 🧠 Key Features
+## Key Features
 
-- Extracts and summarizes transcripts from technical/coding videos.
-- Outputs detailed summaries with proper headings and code formatting.
-- Generates clean documentation in:
-  - 🌐 `.html` (Web Page)
-- Custom prompt system optimized for coding and technical breakdowns.
-- Works with **Google Gemini API** (v1beta via `google.generativeai`).
+- **Language Selection:** Export notes in your preferred language, including Spanish, Hindi, French, German, and more.
+- **Flexible Notes Format:** Choose from multiple predefined notes formats or use your own custom prompt for tailored note generation.
+- **HTML Export:** Download generated notes as an HTML file for easy offline access or sharing.
 
----
+## 1. Problem Statement
 
-## 📁 Project Folder Structure
+Learning from YouTube videos is time-consuming and often inefficient, especially for technical, interview, or research topics. Viewers struggle to extract actionable notes, summaries, or Q&A from lengthy video content, making revision and knowledge retention difficult.
+
+## 2. How TubeNotes AI Resolves the Problem
+
+TubeNotes AI automatically converts YouTube video content into concise, organized notes using advanced AI (Google Gemini). It fetches video transcripts, applies structured prompts, and generates high-quality notes in various formats and languages. This enables users to quickly review, revise, and retain key insights from any video.
+
+### Notes Format and Language selection
+
+![Notes Format and Language selection](assets/Format.PNG)
+
+## 3. Advantages
+
+- **Saves Time:** Instantly generates notes from any YouTube video.
+- **Multiple Formats:** Supports technical notes, interview Q&A, and custom prompts.
+- **Language Support:** Notes can be generated in multiple languages.
+- **Downloadable:** Export notes as HTML for offline use or sharing.
+- **User-Friendly:** Simple Streamlit interface for easy operation.
+
+
+### Notes
+
+![Notes Generated](assets/Notes.png)
+
+
+## 4. Folder Structure
 
 ```
-VideoSummarizer_Project/
+TubeNotes AI/
 │
-├── video_summarizer/
-│   ├── app.py                  # Main Streamlit App        
-│   ├── requirements.txt        # All dependencies
-│   ├── output/                 # Stores generated files (txt, html, docx)
-│   └── .env                    # (local only) API keys and config variables
-│
-├── README.md                   # Project overview and instructions
-└── venv/                       # Virtual Environment (local only)
+├── app.py                # Main Streamlit application
+├── logo.png              # App logo
+├── .env                  # Environment variables (API keys)
+├── requirements.txt      # Python dependencies
+├── assets/
+│   ├── ui_demo.gif       # UI demonstration GIF
+│   └── processed_notes_demo.gif  # Processed notes demonstration GIF
+├── README.md             # Project documentation
+└── (other files/folders as needed)
 ```
 
----
+## 5. How to Use
 
-## ⚙️ Setup Instructions
-
-### 1. Clone the Repository
-
-```bash
-git clone <repo-url>
-cd VideoSummarizer_Project
-```
-
-### 2. Create and Activate Virtual Environment
-
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
-
-# macOS/Linux
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## Configure API (Google Gemini)
-
-1. **Install Google Generative AI SDK:**
-
-   ```bash
-   pip install google-generativeai
+1. **Clone the repository:**
+   ```
+   git clone https://github.com/yourusername/TubeNotes-AI.git
+   cd TubeNotes-AI
    ```
 
-2. **Get Your Gemini API Key:**
+2. **Install dependencies:**
+   ```
+   pip install -r requirements.txt
+   ```
 
-   * Visit: [https://makersuite.google.com/app/apikey]
-   * Copy your API key.
-
-3. **Set Up Environment Variable:**
-
-   - **Local Development:**  
-     Create a `.env` file inside `video_summarizer/` directory:
+3. **Set up your `.env` file:**
+   - Add your Google Gemini API key:
      ```
      GOOGLE_API_KEY=your_api_key_here
      ```
-   - **Vercel Deployment:**  
-     Set `GOOGLE_API_KEY` in the Vercel dashboard under Project Settings > Environment Variables.
 
----
+4. **Run the app:**
+   ```
+   streamlit run app.py
+   ```
 
-## 🚀 Run the App
+5. **Use the Interface:**
+   - Enter a YouTube video link.
+   - Select your preferred notes format (including custom prompt option).
+   - Choose your desired export language (e.g., Spanish, Hindi, French, German, etc.).
+   - Click "Generate Notes" to view the results.
+   - Download the generated notes as an HTML file for offline use or sharing.
 
-Use Streamlit to launch the app:
+### 📝 Download Notes in HTML
 
-```bash
-streamlit run video_summarizer/app.py
-```
+![Download Notes](assets/DownloadNotes.png)
 
-This will open the app in your browser at [http://localhost:8501]
+## 6. Conclusion
 
----
+TubeNotes AI streamlines the process of learning from YouTube videos by transforming them into actionable, structured notes. It empowers users to save time, improve retention, and prepare effectively for technical interviews, research, or general study.
 
-## ✅ Output Files
+## 7. License
 
-After summarization, the app allows downloading the result as:
-
-* `.html` → Professional web-like documentation with syntax highlighting
-
----
-
-## TODO / Future Enhancements
-
-* Video upload and auto-transcription integration
-* Support for multiple LLMs (e.g., OpenAI, Claude)
-* Topic filtering and tagging system
-* Multiple language support
-
----
-
-## Contributing
-
-Feel free to fork the project and submit PRs! Suggestions welcome via Issues.
+This project is licensed under the [MIT License](LICENSE).

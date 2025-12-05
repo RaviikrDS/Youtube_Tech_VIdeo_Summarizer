@@ -331,7 +331,7 @@ st.set_page_config(
 # SIDEBAR UI
 # =========================
 with st.sidebar:
-    st.image("logo.png", width=100)
+    st.image("assets/logo.png", width=100)
     st.markdown("<h2 style='color:#8B8B00;'>TubeNotes AI </h2>", unsafe_allow_html=True)
     st.markdown(
         "<p style='font-size:16px; color:#888; font-style:italic;'> Tubenotes AI transforms YouTube video content into concise, organized notes using advanced AI. Save time, improve retention, and turn any YouTube video into actionable insights in your preferred language. </p>",
